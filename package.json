@@ -1,0 +1,69 @@
+{
+	"name": "yarn-pnp-extension",
+	"displayName": "Yarn Pnp extension",
+	"description": "",
+	"version": "0.1.0",
+	"private": true,
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.67.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onView:yarnBerryExplorer",
+		"onCommand:yarnBerryResolve.openResolve"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "yarnBerryExplorer",
+					"name": "Yarn Berry Explorer"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "yarnBerryResolve.openResolve",
+				"title": "Resolve yarn package"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "yarnBerryResolve.openResolve",
+				"key": "ctrl+k ctrl+n",
+				"mac": "cmd+k cmd+n",
+				"when": "!terminalFocus"
+			}
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "yarnBerryResolve.openResolve"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"lint": "eslint . --ext .ts,.tsx"
+	},
+	"devDependencies": {
+		"@types/node": "^16.0.0",
+		"@types/vscode": "^1.67.0",
+		"@typescript-eslint/eslint-plugin": "^5.30.0",
+		"@typescript-eslint/parser": "^5.30.0",
+		"eslint": "^8.13.0",
+		"typescript": "^4.7.2"
+	},
+	"dependencies": {
+		"@yarnpkg/core": "^3.0.0",
+		"@yarnpkg/fslib": "^2.6.2"
+	},
+	"packageManager": "yarn@3.2.1"
+}
