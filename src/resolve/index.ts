@@ -486,5 +486,3 @@ export async function activateSearch(context: vscode.ExtensionContext) {
 }
 //lodash??????????????/
 
-//sorting - dirs first react for santa-editor-symbols
-//"react" - result is bad, check

@@ -89,12 +89,12 @@ export class BerryProvider implements vscode.TreeDataProvider<Entry> {
 			return [];
 		}
 		const children = await vscode.workspace.fs.readDirectory(uri);
-		// children.sort((a, b) => {
-		// 	if (a[1] === b[1]) {
-		// 		return a[0].localeCompare(b[0]);
-		// 	}
-		// 	return a[1] === vscode.FileType.Directory ? -1 : 1;
-		// });
+		children.sort((a, b) => {
+			if (a[1] === b[1]) {
+				return a[0].localeCompare(b[0]);
+			}
+			return a[1] === vscode.FileType.Directory ? -1 : 1;
+		});
 
 		return children.map(([name, type]) => vscode.Uri.joinPath(uri, name));
 	}
