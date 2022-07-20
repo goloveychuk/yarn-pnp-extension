@@ -86,7 +86,8 @@ function prepareQuery(query: string) {
 }
 
 interface ScoreData {
-	name: Locator;
+	label: string;
+	locator: Locator
 	score: FuzzyScore;
 }
 
@@ -103,12 +104,18 @@ interface ScoreData {
 
 function scoreForArr(query: string, items: IterableIterator<Locator>) {
 	const scores: Array<ScoreData> = [];
-	for (const name of items) {
-		const sc = scoreFuzzy(castLocatorToStr(name), query, query.toLowerCase(), true);
+	for (const locator of items) {
+		const label = descToLabel(locator).label;
+		const sc = scoreFuzzy(label, query, query.toLowerCase(), true);
 		if (sc[0] > 0) {
-			scores.push({ name, score: sc });
+			scores.push({ label, locator, score: sc });
 		}
 	}
+	scores.forEach(sc => {
+		if (sc.label === query) {
+			sc.score[0]+=5
+		}
+	})
 	scores.sort((a, b) => {
 		return b.score[0] - a.score[0];
 	});
@@ -121,7 +128,7 @@ function scoreForArr(query: string, items: IterableIterator<Locator>) {
 // }
 
 interface Result {
-	name: Locator;
+	locator: Locator;
 	path: Locator[];
 }
 
@@ -183,8 +190,8 @@ function limitAndArray<T>(lim: number, gen: IterableIterator<T> | T[]) {
 const TOTAL_LIMIT = 100;
 
 interface InWork {
-	name: Locator;
-	curScore: number;
+	locator: Locator;
+	curScore: number
 	parentsGen: Generator<Locator[], void, unknown>;
 	lastPath: Locator[];
 }
@@ -197,9 +204,9 @@ function getPath(parentsGen: InWork['parentsGen']): Locator[] | null {
 	return next.value;
 }
 
-function adjustScore(inw: InWork) {
+function calcScore(inw: InWork, initialScore: number) {
 	const DEPTH_K = 1;
-	inw.curScore = inw.curScore - inw.lastPath.length * DEPTH_K;
+	return initialScore - inw.lastPath.length * DEPTH_K;
 }
 
 function insertWork(inWork: InWork[], item: InWork) {
@@ -217,16 +224,17 @@ function* getSearchRes(registry: Registry, query: string): Generator<Result> {
 	);
 
 	const inWork = scores.map<InWork>((scoreData) => {
-		const parentsGen = getParentsRoutes(registry, scoreData.name);
+		const parentsGen = getParentsRoutes(registry, scoreData.locator);
 
 		const inw: InWork = {
-			name: scoreData.name,
+			locator: scoreData.locator,
 			parentsGen,
+			get curScore() {
+				return calcScore(this, scoreData.score[0])
+			},
 			lastPath: getPath(parentsGen)!, //todo check
-			curScore: scoreData.score[0],
 		};
 
-		adjustScore(inw);
 		return inw;
 	});
 
@@ -238,14 +246,13 @@ function* getSearchRes(registry: Registry, query: string): Generator<Result> {
 		const top = inWork.pop()!;
 
 		yield {
-			name: top.name,
+			locator: top.locator,
 			path: top.lastPath,
 		};
 		const newLastPath = getPath(top.parentsGen);
 
 		if (newLastPath) {
 			top.lastPath = newLastPath;
-			adjustScore(top);
 			insertWork(inWork, top);
 		}
 	}
@@ -378,6 +385,10 @@ async function createRegistry(projectRoot: string) {
 	return registry;
 }
 
+function processQuery(query: string) {
+	return query.replace(/\\/g, '').trim()
+}
+
 export async function activateSearch(context: vscode.ExtensionContext) {
 	const qp = vscode.window.createQuickPick<MyQuickPickItem>();
 	context.subscriptions.push(qp);
@@ -412,7 +423,8 @@ export async function activateSearch(context: vscode.ExtensionContext) {
 	};
 
 	let searchTok: vscode.CancellationTokenSource | undefined;
-
+	//@ts-expect-error
+	qp.sortByLabel = false
 	qp.onDidAccept(() => {
 		searchTok?.cancel();
 		if (!qp.selectedItems[0]) {
@@ -437,7 +449,10 @@ export async function activateSearch(context: vscode.ExtensionContext) {
 		return tok;
 	};
 
-	const makeSearch = async (query: string) => {
+
+
+	const makeSearch = async (_query: string) => {
+		const query = processQuery(_query)
 		searchTok?.cancel();
 		searchTok = makeSarchTok();
 
@@ -448,16 +463,16 @@ export async function activateSearch(context: vscode.ExtensionContext) {
 		const res = limitAndArray(TOTAL_LIMIT, getSearchRes(registry, query));
 
 		qp.items = res.map<MyQuickPickItem>((r, ind) => {
-			const { label, description } = descToLabel(r.name);
+			const { label, description } = descToLabel(r.locator);
 			const detail = r.path.map((n) => descToLabel(n).label).join(' > ');
-			const _location = registry.data.locationMap.get(r.name);
+			const _location = registry.data.locationMap.get(r.locator);
 
 			return {
-				label,
+				label: ind+ ' ' +label,
 				description,
 				detail,
 				alwaysShow: true,
-				_locator: r.name,
+				_locator: r.locator,
 				_location,
 			};
 		});
@@ -469,3 +484,7 @@ export async function activateSearch(context: vscode.ExtensionContext) {
 	qp.onDidChangeValue(debounce(makeSearch, 300));
 	qp.show();
 }
+//lodash??????????????/
+
+//sorting - dirs first react for santa-editor-symbols
+//"react" - result is bad, check
