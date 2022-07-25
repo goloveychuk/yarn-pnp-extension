@@ -1,6 +1,6 @@
 {
 	"name": "yarn-pnp-extension",
-	"displayName": "Yarn Pnp extension",
+	"displayName": "Yarn Pnp (zip view + resolve helper)",
 	"description": "",
 	"version": "0.1.1",
 	"private": true,
