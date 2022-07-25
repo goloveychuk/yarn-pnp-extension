@@ -2,7 +2,7 @@
 	"name": "yarn-pnp-extension",
 	"displayName": "Yarn Pnp (zip view + resolve helper)",
 	"description": "",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"private": true,
 	"publisher": "goloveychuk",
 	"license": "MIT",
