@@ -498,3 +498,11 @@ export async function activateSearch(context: vscode.ExtensionContext) {
   qp.onDidChangeValue(debounce(makeSearch, 300));
   qp.show();
 }
+
+
+
+// 1) all rec
+// 2) resolve from cur, 
+// 2.1) show all deps for cur
+// 3) show all parents from cur
+// 4) resolve two levels
