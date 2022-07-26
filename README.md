@@ -1,6 +1,8 @@
 # yarn-pnp-extension
 Yarn pnp vscode extension
 
+https://marketplace.visualstudio.com/items?itemName=goloveychuk.yarn-pnp-extension
+
 Cmd K + N to trigger a search
 
 Requires https://marketplace.visualstudio.com/items?itemName=arcanis.vscode-zipfs
