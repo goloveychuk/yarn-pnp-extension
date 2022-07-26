@@ -2,7 +2,6 @@ import { getArchivePart } from '@yarnpkg/fslib/lib/ZipOpenFS';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import clipboard from 'clipboardy';
 
 type Entry = vscode.Uri;
 
@@ -47,7 +46,7 @@ export class BerryProvider implements vscode.TreeDataProvider<Entry> {
   clearUri() {
     this._realuri = undefined;
     this.rootUri = undefined;
-	this.refresh()
+    this.refresh();
   }
 
   getRootUri() {
@@ -122,25 +121,31 @@ export class BerryExplorer {
       // debugger
     });
     vscode.commands.registerCommand('yarnBerryResolve.mount', async () => {
-      await vscode.commands.executeCommand(
-        'zipfs.mountZipFile',
-        treeDataProvider._realuri,
-      );
+      if (treeDataProvider._realuri) {
+        await vscode.commands.executeCommand(
+          'zipfs.mountZipFile',
+          treeDataProvider._realuri,
+        );
+      }
     });
-	vscode.commands.registerCommand('yarnBerryResolve.refresh', () => {
-		treeDataProvider.refresh()
-	});
-	// vscode.commands.registerCommand('yarnBerryResolve.copyArchPath', () => {
-	// 	if (treeDataProvider._realuri) {
-	// 		clipboard.writeSync(treeDataProvider._realuri.fsPath)
-	// 	}
-	// });
+    vscode.commands.registerCommand('yarnBerryResolve.refresh', () => {
+      treeDataProvider.refresh();
+    });
+    vscode.commands.registerCommand(
+      'yarnBerryResolve.copyArchPath',
+      async () => {
+        if (treeDataProvider._realuri) {
+          const clipboard = await import('clipboardy');
+          await clipboard.write(treeDataProvider._realuri.fsPath);
+        }
+      },
+    );
     vscode.commands.registerCommand('yarnBerryResolve.removeArch', async () => {
       if (treeDataProvider._realuri) {
         const uri = treeDataProvider._realuri;
         const res = await vscode.window.showInformationMessage(
           `Do you want to remove archive file?`,
-		  {modal: true, detail: uri.fsPath},
+          { modal: true, detail: uri.fsPath },
           'Remove',
         );
         if (res === 'Remove') {
